@@ -1,10 +1,10 @@
 ﻿# Security-Monitoring-System
 
-###The Security Monitoring System is a cybersecurity project designed to monitor internal user activity and identify suspicious behaviour within an organization. The system focuses on detecting insider-related risks such as unusual login attempts, device changes, location mismatches, and unauthorized file access.
+The Security Monitoring System is a cybersecurity project designed to monitor internal user activity and identify suspicious behaviour within an organization. The system focuses on detecting insider-related risks such as unusual login attempts, device changes, location mismatches, and unauthorized file access.
 
-###Instead of relying on complex machine-learning pipelines, the project uses simple behaviour-based rules and adaptive risk scoring to detect anomalies in real time. This makes the system easier to understand, deploy, and maintain while still providing effective monitoring.
+Instead of relying on complex machine-learning pipelines, the project uses simple behaviour-based rules and adaptive risk scoring to detect anomalies in real time. This makes the system easier to understand, deploy, and maintain while still providing effective monitoring.
 
-# Project Objectives
+## Project Objectives
 
 - Monitor user login activity in real time
 - Detect unusual device and location changes
@@ -12,7 +12,7 @@
 - Assign dynamic risk scores based on user behaviour
 - Provide administrators with live alerts and monitoring
 
-# System Features
+## System Features
 
 - Login Monitoring – tracks login attempts, failed logins, and unusual access
 - Device & Location Tracking – flags logins from new devices or locations
@@ -20,7 +20,7 @@
 - Risk Scoring – increases risk score based on repeated suspicious actions
 - Real-Time Dashboard – displays alerts, risk levels, and user activity
 
-# Technology Stack
+## Technology Stack
 
 - Backend: Python (Flask)
 - Database: SQLite
@@ -28,8 +28,9 @@
 - Security Logic: Rule-based anomaly detection
 - Version Control: Git & GitHub
 
-# Project Structure
+## Project Structure
 
+```
 Security-Monitoring-System/
 │
 ├── backend/
@@ -39,8 +40,8 @@ Security-Monitoring-System/
 ├── requirements.txt
 ├── .gitignore
 └── README.md
-
-# How to Run the Project
+```
+## How to Run the Project
 1. Clone the repository:
    git clone https://github.com/Tanukash12/Security-Monitoring-System.git
 2. Navigate to the project directory:
@@ -57,4 +58,5 @@ Security-Monitoring-System/
   
 ## Author
 - @Tanukash12
+
 
