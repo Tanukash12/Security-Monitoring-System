@@ -1,8 +1,8 @@
 ﻿# Security-Monitoring-System
 
-####The Security Monitoring System is a cybersecurity project designed to monitor internal user activity and identify suspicious behaviour within an organization. The system focuses on detecting insider-related risks such as unusual login attempts, device changes, location mismatches, and unauthorized file access.
+###The Security Monitoring System is a cybersecurity project designed to monitor internal user activity and identify suspicious behaviour within an organization. The system focuses on detecting insider-related risks such as unusual login attempts, device changes, location mismatches, and unauthorized file access.
 
-####Instead of relying on complex machine-learning pipelines, the project uses simple behaviour-based rules and adaptive risk scoring to detect anomalies in real time. This makes the system easier to understand, deploy, and maintain while still providing effective monitoring.
+###Instead of relying on complex machine-learning pipelines, the project uses simple behaviour-based rules and adaptive risk scoring to detect anomalies in real time. This makes the system easier to understand, deploy, and maintain while still providing effective monitoring.
 
 # Project Objectives
 
@@ -57,3 +57,4 @@ Security-Monitoring-System/
   
 ## Author
 - @Tanukash12
+
