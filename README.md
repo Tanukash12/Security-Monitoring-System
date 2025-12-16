@@ -93,6 +93,16 @@ python ml/train_model.py
 - on success you will see this as an output in terminal : MODEL TRAINED USING KAGGLE SECURITY DATA
 - This will generate : backend/ml/anomaly_model.pkl
 
+### 📂 Dataset Used
+
+The machine learning model is trained using a real-world cybersecurity dataset sourced from Kaggle:
+
+🔗 **Cybersecurity Intrusion Detection Dataset**  
+https://www.kaggle.com/datasets/dnkumars/cybersecurity-intrusion-detection-dataset/data
+
+This dataset contains security-related session and login behaviour data, which is used to train the Isolation Forest model for detecting anomalous user activity.
+
+
 ## Project Structure
 
 ```
@@ -123,6 +133,7 @@ Security-Monitoring-System/
   
 ## Author
 - @Tanukash12
+
 
 
 
