@@ -1,32 +1,97 @@
-﻿# Security-Monitoring-System
+# Security Monitoring System
 
-The Security Monitoring System is a cybersecurity project designed to monitor internal user activity and identify suspicious behaviour within an organization. The system focuses on detecting insider-related risks such as unusual login attempts, device changes, location mismatches, and unauthorized file access.
+The **Security Monitoring System** is a cybersecurity-focused web application designed to monitor internal user activity and detect suspicious or insider-related behaviour within an organization.
 
-Instead of relying on complex machine-learning pipelines, the project uses simple behaviour-based rules and adaptive risk scoring to detect anomalies in real time. This makes the system easier to understand, deploy, and maintain while still providing effective monitoring.
+The system combines **rule-based security logic** with **machine learning–based anomaly detection** to identify risky users in real time. It monitors login behaviour, device and location changes, and unauthorized file access, then assigns dynamic risk scores to users.
 
-## Project Objectives
+---
 
-- Monitor user login activity in real time
-- Detect unusual device and location changes
-- Identify unauthorized or suspicious file-access attempts
-- Assign dynamic risk scores based on user behaviour
-- Provide administrators with live alerts and monitoring
+## 🔐 Key Objectives
 
-## System Features
+- Monitor user login activity in real time  
+- Detect unusual device or location changes  
+- Identify unauthorized or suspicious file access  
+- Assign adaptive risk scores to users  
+- Detect anomalies using a trained ML model  
+- Provide administrators with a live monitoring dashboard  
 
-- Login Monitoring – tracks login attempts, failed logins, and unusual access
-- Device & Location Tracking – flags logins from new devices or locations
-- File-Access Control – blocks unauthorized file access instantly
-- Risk Scoring – increases risk score based on repeated suspicious actions
-- Real-Time Dashboard – displays alerts, risk levels, and user activity
+---
 
-## Technology Stack
+## 🚀 System Features
 
-- Backend: Python (Flask)
-- Database: SQLite
-- Frontend: HTML, CSS, JavaScript
-- Security Logic: Rule-based anomaly detection
-- Version Control: Git & GitHub
+### Authentication & Monitoring
+- Secure user registration and login
+- JWT-based authentication
+- Login attempt logging (success, failed, suspicious)
+- Device and IP-based behaviour analysis
+
+### File Access Control
+- Role-based file access
+- Automatic blocking of restricted paths
+- Risk escalation on unauthorized access
+
+### Risk Scoring Engine
+- Rule-based scoring (failed logins, blocked access)
+- ML-based anomaly detection
+- Combined final risk score (0–100)
+
+### Admin Dashboard
+- Live system statistics
+- Recent login attempts
+- File access logs
+- High-risk users list
+- ML anomaly flags per user
+
+---
+
+## 🤖 Machine Learning Integration
+
+The project integrates an **Isolation Forest** model for anomaly detection.
+
+### ML Purpose
+- Detect unusual user behaviour patterns
+- Identify users whose activity deviates from normal behaviour
+- Add ML-based intelligence on top of rule-based security
+
+### ML Features Used
+- Number of failed logins
+- Unusual access patterns
+- Behavioural deviations over time
+
+The ML model is trained using **real-world security data (Kaggle dataset)** and then applied to live user activity data.
+
+---
+
+## 🧠 ML Model Details
+
+- Algorithm: **Isolation Forest**
+- Type: Unsupervised Anomaly Detection
+- Library: `scikit-learn`
+- Model File: `backend/ml/anomaly_model.pkl`
+
+---
+
+## 📊 ML Training (IMPORTANT)
+
+### Step 1: Dataset Location
+After cloning the repository, place the Kaggle dataset here:
+backend/ml/data/kaggle.csv
+
+
+> The dataset must contain security-related behaviour columns  
+> (e.g. failed_logins, unusual_time_access, attack indicators, etc.)
+
+---
+
+### Step 2: Train the ML Model
+
+From the **backend directory**, run:
+
+```bash
+python ml/train_model.py
+```
+- on success you will see this as an output in terminal : MODEL TRAINED USING KAGGLE SECURITY DATA
+- This will generate : backend/ml/anomaly_model.pkl
 
 ## Project Structure
 
@@ -58,5 +123,6 @@ Security-Monitoring-System/
   
 ## Author
 - @Tanukash12
+
 
 
