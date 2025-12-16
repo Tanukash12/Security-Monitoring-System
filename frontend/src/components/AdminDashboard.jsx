@@ -430,10 +430,22 @@ const AdminDashboard = ({ user, onLogout }) => {
                         >
                           {user.risk_score}
                         </div>
-                        <div>
-                          <h5 className="mb-1">{user.username}</h5>
+                        <div><h5 className="mb-1">
+                                {user.username}
+                                {user.anomaly_detected && (
+                                  <span className="badge bg-dark ms-2">ML Anomaly</span>
+                                )}
+                              </h5>
+
+                          
                           <small className="text-muted">{user.email}</small>
-                          <p className="mb-0 mt-1"><small>{user.reasons}</small></p>
+                          <p className="mb-0 mt-1">
+                            <small>
+                              {user.reasons}
+                              {user.anomaly_detected && ' | Behavioral anomaly detected by ML model'}
+                            </small>
+                          </p>
+
                         </div>
                       </div>
                       <div className="d-flex gap-2 align-items-center">

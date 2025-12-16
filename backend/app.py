@@ -11,8 +11,16 @@ from sqlalchemy import event
 from sqlalchemy.engine import Engine
 import sqlite3
 
+from ml.anomaly_detector import get_anomaly_score
+
+
 app = Flask(__name__)
-CORS(app)
+CORS(app, supports_credentials=True, resources={
+    r"/api/*": {
+        "origins": "http://localhost:3000"
+    }
+})
+
 
 # Configuration
 app.config['SECRET_KEY'] = 'your-secret-key-change-this'
@@ -24,7 +32,9 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     "connect_args": {"check_same_thread": False, "timeout": 30}
 }
 
-db = SQLAlchemy(app)
+from models import db, User, LoginAttempt, FileAccess
+db.init_app(app)
+
 
 # Ensure SQLite uses WAL mode and a busy timeout on each connection
 @event.listens_for(Engine, "connect")
@@ -36,62 +46,70 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
         cursor.execute("PRAGMA busy_timeout=30000;")  # 30s
         cursor.close()
 
-# Models
-class User(db.Model):
-    __tablename__ = 'user'
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(200), nullable=False)
-    role = db.Column(db.String(20), default='employee')
-    is_active = db.Column(db.Boolean, default=True)
-    last_login = db.Column(db.DateTime)
-    risk_score = db.Column(db.Integer, default=0)
+# # Models
+# class User(db.Model):
+#     __tablename__ = 'user'
+#     id = db.Column(db.Integer, primary_key=True)
+#     username = db.Column(db.String(80), unique=True, nullable=False)
+#     email = db.Column(db.String(120), unique=True, nullable=False)
+#     password = db.Column(db.String(200), nullable=False)
+#     role = db.Column(db.String(20), default='employee')
+#     is_active = db.Column(db.Boolean, default=True)
+#     last_login = db.Column(db.DateTime)
+#     risk_score = db.Column(db.Integer, default=0)
 
-class LoginAttempt(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    username = db.Column(db.String(80), nullable=False)
-    ip_address = db.Column(db.String(50))
-    device_info = db.Column(db.String(200))
-    location = db.Column(db.String(100))
-    status = db.Column(db.String(20))
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-    is_suspicious = db.Column(db.Boolean, default=False)
+# class LoginAttempt(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+#     username = db.Column(db.String(80), nullable=False)
+#     ip_address = db.Column(db.String(50))
+#     device_info = db.Column(db.String(200))
+#     location = db.Column(db.String(100))
+#     status = db.Column(db.String(20))
+#     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+#     is_suspicious = db.Column(db.Boolean, default=False)
 
-class FileAccess(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    username = db.Column(db.String(80), nullable=False)
-    file_path = db.Column(db.String(500), nullable=False)
-    action = db.Column(db.String(20))
-    risk_level = db.Column(db.String(20))
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-    is_authorized = db.Column(db.Boolean, default=True)
+# class FileAccess(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+#     username = db.Column(db.String(80), nullable=False)
+#     file_path = db.Column(db.String(500), nullable=False)
+#     action = db.Column(db.String(20))
+#     risk_level = db.Column(db.String(20))
+#     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+#     is_authorized = db.Column(db.Boolean, default=True)
 
-class Activity(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    activity_type = db.Column(db.String(50))
-    description = db.Column(db.String(500))
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+# class Activity(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+#     activity_type = db.Column(db.String(50))
+#     description = db.Column(db.String(500))
+#     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
 # Middleware for token verification
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         token = request.headers.get('Authorization')
-        if not token:
-            return jsonify({'message': 'Token is missing'}), 401
+
+        if not token or not token.startswith("Bearer "):
+            return jsonify({'message': 'Token is missing or invalid'}), 401
+
         try:
-            # Expect "Bearer <token>"
-            token = token.split(' ')[1]
+            token = token.replace("Bearer ", "")
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
             current_user = User.query.get(data['user_id'])
-        except Exception:
+
+            if not current_user:
+                return jsonify({'message': 'User not found'}), 401
+
+        except Exception as e:
             return jsonify({'message': 'Token is invalid'}), 401
+
         return f(current_user, *args, **kwargs)
+
     return decorated
+
 
 def admin_required(f):
     @wraps(f)
@@ -129,28 +147,28 @@ def detect_suspicious_login(user, ip, device):
     return False
 
 def calculate_risk_score(user):
+    rule_score = 0
+
     one_hour_ago = datetime.utcnow() - timedelta(hours=1)
 
-    failed_logins = LoginAttempt.query.filter(
+    rule_score += LoginAttempt.query.filter(
         LoginAttempt.user_id == user.id,
         LoginAttempt.status == 'failed',
         LoginAttempt.timestamp > one_hour_ago
-    ).count()
+    ).count() * 10
 
-    unauthorized_access = FileAccess.query.filter(
+    rule_score += FileAccess.query.filter(
         FileAccess.user_id == user.id,
         FileAccess.is_authorized == False,
         FileAccess.timestamp > one_hour_ago
-    ).count()
+    ).count() * 25
 
-    suspicious_logins = LoginAttempt.query.filter(
-        LoginAttempt.user_id == user.id,
-        LoginAttempt.is_suspicious == True,
-        LoginAttempt.timestamp > one_hour_ago
-    ).count()
+    anomaly_score, is_anomaly = get_anomaly_score(user.id)
 
-    risk_score = (failed_logins * 10) + (unauthorized_access * 25) + (suspicious_logins * 15)
-    return min(risk_score, 100)
+    ml_score = 20 if is_anomaly else 0
+
+    final_score = rule_score + ml_score
+    return min(final_score, 100)
 
 # Routes
 @app.route('/')
@@ -387,34 +405,54 @@ def get_risk_users(current_user):
     ).all()
 
     result = []
+
     for user in users:
         failed_count = LoginAttempt.query.filter_by(
-            user_id=user.id, status='failed'
+            user_id=user.id,
+            status='failed'
         ).count()
 
         unauthorized_count = FileAccess.query.filter_by(
-            user_id=user.id, is_authorized=False
+            user_id=user.id,
+            is_authorized=False
         ).count()
 
         reasons = []
         if failed_count > 0:
-            reasons.append(f'{failed_count} failed login(s)')
+            reasons.append(f"{failed_count} failed login(s)")
         if unauthorized_count > 0:
-            reasons.append(f'{unauthorized_count} unauthorized file access(es)')
+            reasons.append(f"{unauthorized_count} unauthorized file access(es)")
 
-        status = 'critical' if user.risk_score > 75 else 'high' if user.risk_score > 50 else 'medium'
+        # Risk status
+        if user.risk_score > 75:
+            status = "critical"
+        elif user.risk_score > 50:
+            status = "high"
+        else:
+            status = "medium"
+
+        # 🔥 ML anomaly detection (SAFE)
+        try:
+            anomaly_score, is_anomaly = get_anomaly_score(user.id)
+            is_anomaly = bool(is_anomaly)   # numpy.bool_ → python bool
+        except Exception as e:
+            print("ML error:", e)
+            anomaly_score = 0
+            is_anomaly = False
 
         result.append({
-            'id': user.id,
-            'username': user.username,
-            'email': user.email,
-            'risk_score': user.risk_score,
-            'status': status,
-            'reasons': ', '.join(reasons),
-            'last_login': user.last_login.isoformat() if user.last_login else None
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "risk_score": int(user.risk_score),
+            "status": status,
+            "reasons": ", ".join(reasons),
+            "anomaly_detected": bool(is_anomaly),
+            "last_login": user.last_login.isoformat() if user.last_login else None
         })
 
-    return jsonify({'risk_users': result}), 200
+    return jsonify({"risk_users": result}), 200
+
 
 @app.route('/api/admin/user/<int:user_id>/suspend', methods=['POST'])
 @token_required
